@@ -1,0 +1,88 @@
+
+-- ENTRY-LEVEL BA PORTFOLIO
+-- Lake Association Analysis 
+
+
+-- SKILL 1: Basic filtering (WHERE, ORDER BY)
+-- Question: Which associations have membership below 50%?
+SELECT 
+    association_name,
+    membership_percentage
+FROM associations
+WHERE membership_percentage < 50
+ORDER BY membership_percentage ASC;
+
+-- SKILL 2: Simple join (2 tables)
+-- Question: What's each association's annual fee?
+SELECT 
+    a.association_name,
+    f.annual_fee
+FROM associations a
+JOIN financials f ON a.association_id = f.association_id
+ORDER BY f.annual_fee DESC;
+
+-- SKILL 3: Aggregation with GROUP BY
+-- Question: What's the average fee by lake size category?
+SELECT 
+    CASE 
+        WHEN total_properties < 200 THEN 'Small'
+        ELSE 'Large'
+    END AS size_category,
+    AVG(annual_fee) AS avg_fee
+FROM associations a
+JOIN financials f ON a.association_id = f.association_id
+GROUP BY size_category;
+
+-- SKILL 4: COUNT and percentage
+-- Question: How many associations offer each service?
+SELECT 
+    SUM(water_quality_monitoring) AS offers_water_quality,
+    SUM(social_events) AS offers_social_events,
+    SUM(newsletter) AS offers_newsletter,
+    COUNT(*) AS total_associations
+FROM services_offered;
+
+-- SKILL 5: Simple comparison to average
+-- Question: Which associations charge above-average fees?
+SELECT 
+    a.association_name,
+    f.annual_fee,
+    (SELECT AVG(annual_fee) FROM financials) AS avg_fee_all
+FROM associations a
+JOIN financials f ON a.association_id = f.association_id
+WHERE f.annual_fee > (SELECT AVG(annual_fee) FROM financials);
+
+-- SKILL 6: Finding outliers
+-- Question: Which associations have the highest and lowest membership?
+-- Highest
+SELECT association_name, membership_percentage
+FROM associations
+ORDER BY membership_percentage DESC
+LIMIT 3;
+
+-- Lowest  
+SELECT association_name, membership_percentage
+FROM associations
+ORDER BY membership_percentage ASC
+LIMIT 3;
+
+-- SKILL 7: Basic financial health check
+-- Question: Is each association in surplus or deficit?
+SELECT 
+    a.association_name,
+    f.total_revenue,
+    f.total_expenses,
+    (f.total_revenue - f.total_expenses) AS net_position
+FROM associations a
+JOIN financials f ON a.association_id = f.association_id;
+
+-- SKILL 8: Simple service count
+-- Question: Association with most services offered
+SELECT 
+    a.association_name,
+    (COALESCE(water_quality_monitoring,0) + 
+     COALESCE(social_events,0) + 
+     COALESCE(newsletter,0)) AS service_count
+FROM associations a
+JOIN services_offered s ON a.association_id = s.association_id
+ORDER BY service_count DESC;
